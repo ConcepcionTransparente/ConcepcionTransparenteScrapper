@@ -1,0 +1,21 @@
+{
+  "name": "concepcion-transparente-scrapper",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RedCiudadana/ConcepcionTransparenteScrapper.git"
+  },
+  "author": "",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/RedCiudadana/ConcepcionTransparenteScrapper/issues"
+  },
+  "homepage": "https://github.com/RedCiudadana/ConcepcionTransparenteScrapper#readme",
+  "dependencies": {
+    "x-ray": "^2.3.2"
+  }
+}
