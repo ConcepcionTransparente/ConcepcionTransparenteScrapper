@@ -1,4 +1,16 @@
+var error = [];
+
 var Xray = require('x-ray');
+var mongoose = require('mongoose');
+
+// Throttle the requests to n requests per ms milliseconds.
+var x = Xray().throttle(10, 1000);
+
+var options = {
+  upsert: true,
+  new: true,
+  setDefaultsOnInsert: true
+};
 
 function monthStringToNumber(m) {
   if (m == 'Enero') {
@@ -30,13 +42,19 @@ function monthStringToNumber(m) {
   }
 }
 
+function parseImporteStringAsFloat(m) {
+  var y = m.replace(/\./g, '').replace(/\,/g, '.');
+  y = parseFloat(y);
+
+  return y;
+}
+
 // Convert month and year in date
 function stringToDate(month, year) {
   // new Date(year, month, day, hours, minutes, seconds, milliseconds)
   var d = new Date(year, month, 01,00,00,00,00);
   d.toISOString().slice(0, 10);
 
-  console.log('fecha: ' + d);
 
   return d;
 }
@@ -54,7 +72,7 @@ function procesarAnio(lineaAnio) {
       return;
     }
 
-    lineasProveedor.map(procesarProveedorDeAnio, {
+    lineasProveedor.slice(0, 1).map(procesarProveedorDeAnio, {
       year: lineaAnio.year,
       total_amount: lineaAnio.total_amount
     });
@@ -75,7 +93,7 @@ function procesarProveedorDeAnio(lineaProveedor) {
       return;
     }
 
-    lineasRubros.map(procesarRubroDeProveedor, {
+    lineasRubros.slice(0, 1).map(procesarRubroDeProveedor, {
       provider: lineaProveedor,
       year: parentObject.year,
       total_amount: parentObject.total_amount
@@ -97,7 +115,7 @@ function procesarRubroDeProveedor(lineaRubro) {
       return;
     }
 
-    lineasMeses.map(normalizar, {
+    lineasMeses.slice(0, 1).map(persistir, {
       category: lineaRubro,
       provider: parentObject.provider,
       year: parentObject.year,
@@ -106,11 +124,69 @@ function procesarRubroDeProveedor(lineaRubro) {
   });
 };
 
-function normalizar(o) {
-  console.log('counter');
-  console.log(counter);
+function updateCategoria(proveedor, categoria, childObject) {
+  var monthNumber = monthStringToNumber(childObject.month);
+  var newDate = stringToDate(monthNumber, childObject.year);
 
-  counter = counter + 1;
+  // Importe de un proveedor en un cierto mes
+  var partialImport = parseFloat(
+    parseImporteStringAsFloat(childObject.import)
+  );
+
+  // Insertar orden de compra
+  mongoose
+    .model('PurchaseOrder')
+    .findOneAndUpdate(
+      {
+        year: childObject.year,
+        month: monthNumber,
+        date: newDate,
+        numberOfContracts: childObject.numberOfContracts,
+        import: partialImport,
+        fk_Provider: proveedor._id,
+        fk_Category: categoria._id
+      },
+      {
+        year: childObject.year,
+        month: monthNumber,
+        date: newDate,
+        numberOfContracts: childObject.numberOfContracts,
+        import: partialImport,
+        fk_Provider: proveedor._id,
+        fk_Category: categoria._id
+      },
+      options
+    )
+    .exec()
+    .catch(function(error) {
+      console.log('Got error while updating PurchaseOrder');
+      console.log(error);
+    });
+}
+
+function updateProvider(proveedor, childObject) {
+  // Insertar categoría
+  mongoose
+    .model('Category')
+    .findOneAndUpdate(
+      { category: childObject.category },
+      {
+        cod: childObject.cod,
+        category: childObject.category
+      },
+      options
+    )
+    .exec()
+    .then(function(categoria) {
+      updateCategoria(proveedor, categoria, childObject);
+    })
+    .catch(function(error) {
+      console.log('Got error while calling updateCategoria');
+      console.log(error);
+    });
+}
+
+function persistir(lineaMes) {
   var parentObject = this;
   var year = parseInt(parentObject.year); // Año
 
@@ -122,158 +198,55 @@ function normalizar(o) {
     total_contrats: parentObject.provider.total_contrats, // Cantidas de contrataciones en UN AÑO
     cod: parentObject.category.cod, // Codigo del rubro
     category: parentObject.category.category, // Nombre del rubro (reparticion)
-    month: o.month, // Mes
-    numberOfContracts: o.numberOfContracts, // Cantidad de contratos para ese mes
-    import: o.import // Importe en ese mes
+    month: lineaMes.month, // Mes
+    numberOfContracts: lineaMes.numberOfContracts, // Cantidad de contratos para ese mes
+    import: lineaMes.import // Importe en ese mes
   };
 
-  /**
-   * Cada objeto a normalizar cuenta con:
-   *
-   *   * year
-   *   * cuil
-   *   * grant_title
-   *   * cod
-   *   * category
-   *   * month
-   *   * numberofcontracts
-   *   * import
-   */
+  // Importe total para el años correspondiente a esta fila
+  var totalImport = parseFloat(
+    parseImporteStringAsFloat(childObject.total_amount)
+  );
 
-  var monthNumber = monthStringToNumber(childObject.month);
-  var newDate = stringToDate(monthNumber, childObject.year);
+  // See: http://mongoosejs.com/docs/4.x/docs/api.html
+  mongoose
+    .model('Provider')
+    .findOneAndUpdate(
+      { cuil: childObject.cuil },
+      {
+        cuil: childObject.cuil,
+        grant_title: childObject.grant_title
+      },
+      options
+    )
+    .exec()
+    .then(function(proveedor) {
+      updateProvider(proveedor, childObject);
+    })
+    .catch(function(error) {
+      console.log('Got error while calling updateProvider');
+      console.log(error);
+    });
 
-  year = parseInt(year);
-
-  // Convert import to correct float number
-  function nuevoImporte(m) {
-    var y = m.replace(/\./g, '').replace(/\,/g, '.');
-    y = parseFloat(y);
-
-    return y;
-  }
-
-  var w = nuevoImporte(childObject.import);
-  var z = nuevoImporte(childObject.total_amount);
-  var partialImport = parseFloat(w); //importe de un proveedor en un cierto mes
-  var totalImport = parseFloat(z); //importe total para el años correspondiente a esta fila
-
-  var updateProvider = {
-    cuil: childObject.cuil,
-    grant_title: childObject.grant_title
-  };
-
-  var options = {
-    upsert: true,
-    new: true,
-    setDefaultsOnInsert: true
-  };
-
-  // mongoose
-  //     .model('Provider')
-  //     .findOneAndUpdate(
-  //         {
-  //             cuil: childObject.cuil
-  //         },
-  //         updateProvider,
-  //         options,
-  //         function(err, result1) {
-  //             if (err) {
-  //                 console.log(err);
-  //                 return;
-  //             }
-
-  //             console.log("updateando provider");
-  //             console.log("result1:" + result1);
-
-  //             // Insercion de category
-  //             var updateCategory = {
-  //                 cod: childObject.cod,
-  //                 category: childObject.category
-  //             };
-  //             mongoose.model('Category').findOneAndUpdate({
-  //                 // cod: childObject.cod,
-  //                 category: childObject.category
-  //             }, updateCategory, options, function(err, result2) {
-  //                 if (err) {
-  //                     console.log(err);
-  //                     return;
-  //                 }
-  //                 // console.log("result2" + result2);
-  //                 // console.log("------------------------------------- RESULT1-ID: " + result1._id);
-  //                 // console.log("------------------------------------- RESULT2-ID: " + result2._id);
-
-  //                 //insercion de orden de compra
-  //                 var Purchase = {
-  //                     year: childObject.year,
-  //                     month: monthNumber,
-  //                     date: newDate,
-  //                     numberOfContracts: childObject.numberOfContracts,
-  //                     import: partialImport,
-  //                     fk_Provider: result1._id,
-  //                     fk_Category: result2._id
-  //                 };
-  //                 mongoose.model('PurchaseOrder').findOneAndUpdate({
-  //                     year: childObject.year,
-  //                     month: monthNumber,
-  //                     date: newDate,
-  //                     numberOfContracts: childObject.numberOfContracts,
-  //                     import: partialImport,
-  //                     fk_Provider: result1._id,
-  //                     fk_Category: result2._id
-  //                 }, Purchase, options, function(err, purchase) {
-  //                     if (err) {
-  //                         console.log("ERROR AL INSERTAR PURCHASE EN LA DATABASE: ");
-  //                         console.log(err);
-  //                         return;
-  //                     }
-  //                     console.log("NEW PURCHASE: " );
-  //                     console.log(Purchase);
-  //                 }); //END INSERT PURCHASE
-  //                 // return;
-  //                 // console.log("NEW CATEGORY: " + result2);
-
-  //             }); //END UPDATE CATEGORY
-  //             // return;
-  //             // console.log("NEW PROVIDER: " + result1);
-
-  //             // result.status(200).send(result);
-  //         }
-  //     );
-
-  var updateYear = {
-    year: childObject.year,
-    total_contrats: childObject.total_contrats,
-    totalAmount: totalImport
-  };
-
-  // mongoose
-  //     .model('Year')
-  //     .findOneAndUpdate(
-  //         {
-  //             year: childObject.year
-  //         },
-  //         updateYear,
-  //         options,
-  //         function(err, years) {
-  //             if (err) {
-  //                 console.log(err);
-  //                 return;
-  //             } else {
-  //                 // console.log("NEW YEAR: " + years);
-  //             }
-  //         }
-  //     );
+  mongoose
+    .model('Year')
+    .findOneAndUpdate(
+      { year: childObject.year },
+      {
+        year: childObject.year,
+        total_contrats: childObject.total_contrats,
+        totalAmount: totalImport
+      },
+      options
+    )
+    .exec()
+    .catch(function(error) {
+      console.log('Got error while updating Year');
+      console.log(error);
+    });
 };
 
 module.exports = function() {
-  console.log('Start scrapping');
-
-  // Throttle the requests to n requests per ms milliseconds.
-  var x = Xray().throttle(10, 1000);
-  var counter = 0;
-
-  var error = [];
   var url = 'http://www.cdeluruguay.gob.ar/datagov/proveedoresContratados.php';
 
   // Reporte: Proveedores Contratados
@@ -282,8 +255,12 @@ module.exports = function() {
     total_amount: 'td:nth-of-type(4)', // Importe de ese proveedor en ese año
     href: 'td:nth-of-type(8) a@href' // a@href a Ver por proveedores
   }])(function(err, lineasAnios) {
-    lineasAnios.map(procesarAnio)
+    lineasAnios.slice(0, 1).map(procesarAnio);
   });
+
+  if (error.length > 0) {
+    throw new Error('Got errors');
+  }
 
   return;
 };

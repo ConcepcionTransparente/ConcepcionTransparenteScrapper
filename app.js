@@ -1,47 +1,19 @@
 // Concepcion Transparente Scraper
-
 var time = require('node-tictoc');
 var mongoose = require('mongoose');
-var Float = require('mongoose-float').loadType(mongoose, 2);
-var Schema = mongoose.Schema;
 
 var scrape = require('./scrape');
-
-// Define models
-mongoose.model('Year', new Schema({
-  year: Number,
-  numberOfContracts: Number,
-  totalAmount: { type: Float },
-  budget: {type: Float }
-}));
-
-mongoose.model('Provider', new Schema({
-  cuil: Number,
-  grant_title: String
-}));
-
-mongoose.model('Category', new Schema({
-  cod : String,
-  category: String // Repartición
-}));
-
-mongoose.model('PurchaseOrder', new Schema({
-  year: String,
-  month: String,
-  date: Date,
-  numberOfContracts: Number, // Cantidad de contrataciones
-  import: { type: Float }, // Importe
-  fk_Provider: {type: Schema.ObjectId, ref: "Provider"},
-  fk_Category: {type: Schema.ObjectId, ref: "Category"}
-}));
+require('./models');
 
 // Connect to database
 require('dotenv').config();
 
-mongoose.set('bufferCommands', false);
+// mongoose.set('bufferCommands', false);
 mongoose.connect(
   // TODO: Evaluar si esto podría estar en la variable de entorno
   process.env.MONGODB_URI + '?socketTimeoutMS=90000',
+  // 'mongodb://127.0.0.1:27017/ct?socketTimeoutMS=90000',
+
   function(err, db) {
     if (err) {
       console.log('Unable to connect to the server. Please start the server.', err);
@@ -52,10 +24,40 @@ mongoose.connect(
     console.log('Successfully connected to server');
 
     time.tic();
-
     scrape();
 
-    mongoose.connection.close();
+    // var provider = mongoose
+    //   .model('Provider')
+    //   .findOneAndUpdate(
+    //     { cuil: 12 },
+    //     {
+    //       cuil: 12,
+    //       grant_title: 'sup_title12'
+    //     },
+    //     {
+    //       upsert: true,
+    //       new: true,
+    //       setDefaultsOnInsert: true
+    //     },
+    //     function(err, result) {
+    //       if (err) {
+    //         console.log('Got error');
+
+    //         console.log(err);
+    //       }
+
+    //       console.log('Done with the inserting');
+    //       console.log(result);
+
+    //       return true;
+    //     }
+    //   );
+
+    // mongoose.model('Provider').find();
+
+    // Dado que las operaciones de Mongoose son asíncronas, cerrar esta conexión
+    // resulta en problemas
+    // mongoose.connection.close();
     time.toc();
   }
 );
