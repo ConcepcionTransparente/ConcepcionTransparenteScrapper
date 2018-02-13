@@ -55,7 +55,6 @@ function stringToDate(month, year) {
   var d = new Date(year, month, 01,00,00,00,00);
   d.toISOString().slice(0, 10);
 
-
   return d;
 }
 
@@ -247,6 +246,9 @@ function persistir(lineaMes) {
 };
 
 module.exports = function() {
+  console.log('Waving!');
+  return;
+
   var url = 'http://www.cdeluruguay.gob.ar/datagov/proveedoresContratados.php';
 
   // Reporte: Proveedores Contratados
