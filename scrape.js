@@ -256,9 +256,6 @@ function persistir(lineaMes) {
 };
 
 module.exports = function() {
-  console.log('Sup');
-  return;
-
   var url = 'http://www.cdeluruguay.gob.ar/datagov/proveedoresContratados.php';
 
   // Reporte: Proveedores Contratados
