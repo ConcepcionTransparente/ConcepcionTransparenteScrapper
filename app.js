@@ -10,19 +10,28 @@ require('./models');
 require('dotenv').config();
 
 function scheduleScraping() {
-    var now = new Date();
-
     scrape();
 
     // La siguiente ejecución se agenda para en cuatro horas
     var nextExecutionDelay = 4 * 60 * 60 * 1000;
 
-    console.log('Setting next execution after ' + (nextExecutionDelay / 1000) + ' seconds');
+    console.log('Setting next execution of scrapping after ' + (nextExecutionDelay / 1000) + ' seconds');
 
     setTimeout(function() {
         scheduleScraping();
     }, nextExecutionDelay);
 }
+
+function schedulePing() {
+  // La siguiente ejecución se agenda para en un minuto
+    var nextExecutionDelay = 1 * 60 * 1000;
+
+    console.log('Setting next execution of ping after ' + (nextExecutionDelay / 1000) + ' seconds');
+
+    setTimeout(function() {
+        schedulePing();
+    }, nextExecutionDelay);
+};
 
 mongoose.connect(
   process.env.MONGODB_URI + '?socketTimeoutMS=90000',
@@ -35,6 +44,8 @@ mongoose.connect(
     }
 
     console.log('Successfully connected to server');
+
+    schedulePing();
 
     scheduleScraping();
 
