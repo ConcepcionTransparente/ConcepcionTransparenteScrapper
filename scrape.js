@@ -71,7 +71,7 @@ function procesarAnio(lineaAnio) {
       return;
     }
 
-    lineasProveedor.slice(0, 1).map(procesarProveedorDeAnio, {
+    lineasProveedor.map(procesarProveedorDeAnio, {
       year: lineaAnio.year,
       total_amount: lineaAnio.total_amount
     });
@@ -92,7 +92,7 @@ function procesarProveedorDeAnio(lineaProveedor) {
       return;
     }
 
-    lineasRubros.slice(0, 1).map(procesarRubroDeProveedor, {
+    lineasRubros.map(procesarRubroDeProveedor, {
       provider: lineaProveedor,
       year: parentObject.year,
       total_amount: parentObject.total_amount
@@ -114,7 +114,7 @@ function procesarRubroDeProveedor(lineaRubro) {
       return;
     }
 
-    lineasMeses.slice(0, 1).map(persistir, {
+    lineasMeses.map(persistir, {
       category: lineaRubro,
       provider: parentObject.provider,
       year: parentObject.year,
@@ -157,6 +157,9 @@ function updateCategoria(proveedor, categoria, childObject) {
       options
     )
     .exec()
+    .then(function() {
+      console.log('Orden de compra persistida');
+    })
     .catch(function(error) {
       console.log('Got error while updating PurchaseOrder');
       console.log(error);
@@ -177,6 +180,8 @@ function updateProvider(proveedor, childObject) {
     )
     .exec()
     .then(function(categoria) {
+      console.log('Categoría persistida: ' + childObject.category);
+
       updateCategoria(proveedor, categoria, childObject);
     })
     .catch(function(error) {
@@ -220,6 +225,8 @@ function persistir(lineaMes) {
     )
     .exec()
     .then(function(proveedor) {
+      console.log('Proveedor persistido: ' + childObject.grant_title);
+
       updateProvider(proveedor, childObject);
     })
     .catch(function(error) {
@@ -239,6 +246,9 @@ function persistir(lineaMes) {
       options
     )
     .exec()
+    .then(function() {
+      console.log('Anio persistdo: ' + childObject.year);
+    })
     .catch(function(error) {
       console.log('Got error while updating Year');
       console.log(error);
@@ -246,7 +256,7 @@ function persistir(lineaMes) {
 };
 
 module.exports = function() {
-  console.log('Waving!');
+  console.log('Sup');
   return;
 
   var url = 'http://www.cdeluruguay.gob.ar/datagov/proveedoresContratados.php';
@@ -257,7 +267,7 @@ module.exports = function() {
     total_amount: 'td:nth-of-type(4)', // Importe de ese proveedor en ese año
     href: 'td:nth-of-type(8) a@href' // a@href a Ver por proveedores
   }])(function(err, lineasAnios) {
-    lineasAnios.slice(0, 1).map(procesarAnio);
+    lineasAnios.map(procesarAnio);
   });
 
   if (error.length > 0) {

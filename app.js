@@ -1,6 +1,8 @@
 // Concepcion Transparente Scraper
 var time = require('node-tictoc');
 var mongoose = require('mongoose');
+var http = require('http');
+var debug = require('debug')('CTS:server');
 
 var scrape = require('./scrape');
 require('./models');
@@ -13,8 +15,10 @@ function scheduleScraping() {
 
     scrape();
 
-    // La siguiente ejecución se agenda para en dos horas
-    var nextExecutionDelay = 0.5 * 60 * 1000;
+    // La siguiente ejecución se agenda para en cuatro horas
+    // var nextExecutionDelay = 4 * 60 * 60 * 1000;
+
+    var nextExecutionDelay = 5 * 1000;
 
     console.log('Setting next execution after ' + (nextExecutionDelay / 1000) + ' seconds');
 
@@ -42,3 +46,50 @@ mongoose.connect(
     // mongoose.connection.close();
   }
 );
+
+// Connect to port to allow Heroku consider this as a running app
+var server = http.createServer();
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
+
+server.listen(3000);
+server.on('error', onError);
+server.on('listening', onListening);
