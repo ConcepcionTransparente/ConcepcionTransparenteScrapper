@@ -2,7 +2,6 @@
 var time = require('node-tictoc');
 var mongoose = require('mongoose');
 var http = require('http');
-var debug = require('debug')('CTS:server');
 
 var scrape = require('./scrape');
 require('./models');
@@ -87,7 +86,8 @@ function onListening() {
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
-  debug('Listening on ' + bind);
+
+  console.log('Listening on ' + bind);
 }
 
 /**
