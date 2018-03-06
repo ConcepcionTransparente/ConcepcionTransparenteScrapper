@@ -7,7 +7,7 @@ mongoose.model('Year', new Schema({
   year: Number,
   numberOfContracts: Number,
   totalAmount: { type: Float },
-  budget: {type: Float }
+  budget: { type: Float }
 }));
 
 mongoose.model('Provider', new Schema({
