@@ -13,7 +13,7 @@ function scheduleScraping() {
     scrape();
 
     // La siguiente ejecución se agenda para en cuatro horas
-    var nextExecutionDelay = 4 * 60 * 60 * 1000;
+    var nextExecutionDelay = 12 * 60 * 60 * 1000;
 
     console.log('Setting next execution of scrapping after ' + (nextExecutionDelay / 1000) + ' seconds');
 
@@ -22,6 +22,7 @@ function scheduleScraping() {
     }, nextExecutionDelay);
 }
 
+// For debugging purposes
 function schedulePing() {
   // La siguiente ejecución se agenda para en un minuto
     var nextExecutionDelay = 1 * 60 * 1000;
