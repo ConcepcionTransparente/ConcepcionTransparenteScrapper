@@ -263,7 +263,7 @@ module.exports = function() {
   // Reporte: Proveedores Contratados
   x(url, 'body tr.textoTabla', [{
     year: 'td', // Año
-    total_amount: 'td:nth-of-type(4)', // Importe de ese proveedor en ese año
+    total_amount: 'td:nth-of-type(4)', // Total de importe de ese año
     href: 'td:nth-of-type(8) a@href' // a@href a Ver por proveedores
   }])(function(err, lineasAnios) {
     lineasAnios.map(procesarAnio);
