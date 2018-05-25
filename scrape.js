@@ -297,24 +297,17 @@ module.exports = function() {
         .then(function(lineasAnios) {
           return Promise.all(lineasAnios.slice(0, 1).map(procesarAnio));
         })
-        .then(function() {
+        .then(function () {
           console.log('Done. Closing connection.');
+
+          // En este punto es seguro cerrar la conexión de Mongoose porque se supone
+          // que ya todo lo que se tenía que hacer se hizo
           mongoose.connection.close();
         })
         .catch(function(error) {
           console.log('Got error');
           console.log(error);
         });
-
-      // if (error.length > 0) {
-      //   throw new Error('Got errors');
-      // }
-
-      // Dado que las operaciones de Mongoose son asíncronas, cerrar esta conexión
-      // resulta en problemas
-      // mongoose.connection.close();
-
-      // return;
     })
     .catch(function (error) {
       console.log('Unable to connect to the server. Please start the server.')

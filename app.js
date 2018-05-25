@@ -28,7 +28,7 @@ function scheduleScraping() {
             + ($minutes * 60 * 1000)
             + ($seconds * 1000);
 
-        console.log('Setting next execution of scrapping after ' + (nextExecutionDelay / 1000) + ' seconds');
+        sendEmailNotification(nextExecutionDelay);
 
         setTimeout(function() {
             scheduleScraping();
@@ -36,7 +36,35 @@ function scheduleScraping() {
       });
 }
 
+
 scheduleScraping();
+
+function sendEmailNotification() {
+  mongoose
+    .connect(process.env.MONGODB_URI + '?socketTimeoutMS=90000')
+    .then(function () {
+      console.log('====== Conteos');
+
+      return mongoose
+        .model('PurchaseOrder')
+        .count()
+        .exec()
+        .then(function(cantidadOrdenesCompra) {
+          return mongoose
+            .model('Provider')
+            .count()
+            .exec()
+            .then(function(cantidadProveedores) {
+
+              console.log('Cantidad de proveedores: ' + cantidadProveedores);
+              console.log('Cantidad de órdenes de compra: ' + cantidadOrdenesCompra);
+            })
+        });
+    })
+    .then(function() {
+      console.log('Email notification completed');
+    });
+}
 
 // Connect to port to allow Heroku consider this as a running app
 var server = http.createServer();
