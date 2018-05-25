@@ -9,52 +9,34 @@ require('./models');
 // Connect to database
 require('dotenv').config();
 
+/**
+ * Schedule a scraping involves performing the actual scraping and also setting the
+ * next execution.
+ *
+ * @return {[type]} [description]
+ */
 function scheduleScraping() {
-    scrape();
+    scrape()
+      .then(function() {
+        // La siguiente ejecución se agenda para en cuatro horas
+        $hours = 12;
+        $minutes = 0;
+        $seconds = 0;
 
-    // La siguiente ejecución se agenda para en cuatro horas
-    var nextExecutionDelay = 12 * 60 * 60 * 1000;
+        var nextExecutionDelay =
+          ($hours * 60 * 60 * 1000)
+            + ($minutes * 60 * 1000)
+            + ($seconds * 1000);
 
-    console.log('Setting next execution of scrapping after ' + (nextExecutionDelay / 1000) + ' seconds');
+        console.log('Setting next execution of scrapping after ' + (nextExecutionDelay / 1000) + ' seconds');
 
-    setTimeout(function() {
-        scheduleScraping();
-    }, nextExecutionDelay);
+        setTimeout(function() {
+            scheduleScraping();
+        }, nextExecutionDelay)
+      });
 }
 
-// For debugging purposes
-function schedulePing() {
-  // La siguiente ejecución se agenda para en un minuto
-    var nextExecutionDelay = 1 * 60 * 1000;
-
-    console.log('Setting next execution of ping after ' + (nextExecutionDelay / 1000) + ' seconds');
-
-    setTimeout(function() {
-        schedulePing();
-    }, nextExecutionDelay);
-};
-
-mongoose.connect(
-  process.env.MONGODB_URI + '?socketTimeoutMS=90000',
-
-  function(err, db) {
-    if (err) {
-      console.log('Unable to connect to the server. Please start the server.', err);
-
-      return;
-    }
-
-    console.log('Successfully connected to server');
-
-    schedulePing();
-
-    scheduleScraping();
-
-    // Dado que las operaciones de Mongoose son asíncronas, cerrar esta conexión
-    // resulta en problemas
-    // mongoose.connection.close();
-  }
-);
+scheduleScraping();
 
 // Connect to port to allow Heroku consider this as a running app
 var server = http.createServer();
