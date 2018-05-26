@@ -14,7 +14,7 @@ function sendEmailNotification(data) {
     + `<br />`
     + `Siguiente scrapping programado para: <b>${nextExecutionDate}</b><br />`;
 
-  let transporter = nodemailer.createTransport({
+  var transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: process.env.EMAIL_PORT,
       secure: true,
@@ -24,7 +24,7 @@ function sendEmailNotification(data) {
       }
   });
 
-  let mailOptions = {
+  var mailOptions = {
       from: process.env.EMAIL_SEND_FROM,
       to: process.env.EMAIL_SEND_TO,
       subject: 'Concepción Transparente - Scrapper',
