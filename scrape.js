@@ -76,7 +76,7 @@ function procesarAnio(lineaAnio) {
         // The second argument to the map function refers the whatever it is going
         // to be referenced by 'this' on the invoked function.
         // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map
-        lineasProveedor.slice(0, 1).map(procesarProveedorDeAnio, {
+        lineasProveedor.map(procesarProveedorDeAnio, {
           year: lineaAnio.year,
           total_amount: lineaAnio.total_amount
         })
@@ -295,7 +295,7 @@ module.exports = function() {
         href: 'td:nth-of-type(8) a@href' // a@href a Ver por proveedores
       }])
         .then(function(lineasAnios) {
-          return Promise.all(lineasAnios.slice(0, 1).map(procesarAnio));
+          return Promise.all(lineasAnios.map(procesarAnio));
         })
         .then(function () {
           console.log('Done. Closing connection.');

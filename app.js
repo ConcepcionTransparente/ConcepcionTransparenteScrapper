@@ -1,12 +1,11 @@
 // Concepcion Transparente Scraper
 var time = require('node-tictoc');
-var mongoose = require('mongoose');
 var http = require('http');
 
 var scrape = require('./scrape');
-require('./models');
+var emailNotify = require('./email-notify');
 
-// Connect to database
+require('./models');
 require('dotenv').config();
 
 /**
@@ -19,16 +18,16 @@ function scheduleScraping() {
     scrape()
       .then(function() {
         // La siguiente ejecución se agenda para en cuatro horas
-        $hours = 12;
+        $hours = 0;
         $minutes = 0;
-        $seconds = 0;
+        $seconds = 45;
 
         var nextExecutionDelay =
           ($hours * 60 * 60 * 1000)
             + ($minutes * 60 * 1000)
             + ($seconds * 1000);
 
-        sendEmailNotification(nextExecutionDelay);
+        emailNotify(nextExecutionDelay);
 
         setTimeout(function() {
             scheduleScraping();
@@ -36,35 +35,7 @@ function scheduleScraping() {
       });
 }
 
-
 scheduleScraping();
-
-function sendEmailNotification() {
-  mongoose
-    .connect(process.env.MONGODB_URI + '?socketTimeoutMS=90000')
-    .then(function () {
-      console.log('====== Conteos');
-
-      return mongoose
-        .model('PurchaseOrder')
-        .count()
-        .exec()
-        .then(function(cantidadOrdenesCompra) {
-          return mongoose
-            .model('Provider')
-            .count()
-            .exec()
-            .then(function(cantidadProveedores) {
-
-              console.log('Cantidad de proveedores: ' + cantidadProveedores);
-              console.log('Cantidad de órdenes de compra: ' + cantidadOrdenesCompra);
-            })
-        });
-    })
-    .then(function() {
-      console.log('Email notification completed');
-    });
-}
 
 // Connect to port to allow Heroku consider this as a running app
 var server = http.createServer();
