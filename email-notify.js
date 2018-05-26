@@ -31,7 +31,7 @@ function sendEmailNotification(data) {
       html: emailHtmlContent
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
+  transporter.sendMail(mailOptions, function(error, info) {
       if (error) {
           return console.log(error);
       }
