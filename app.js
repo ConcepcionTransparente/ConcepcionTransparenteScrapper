@@ -18,9 +18,9 @@ function scheduleScraping() {
     scrape()
       .then(function() {
         // La siguiente ejecución se agenda para en cuatro horas
-        $hours = 0;
+        $hours = 12;
         $minutes = 0;
-        $seconds = 45;
+        $seconds = 0;
 
         var nextExecutionDelay =
           ($hours * 60 * 60 * 1000)
