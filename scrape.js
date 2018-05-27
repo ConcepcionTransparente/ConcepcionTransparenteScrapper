@@ -81,6 +81,10 @@ function procesarAnio(lineaAnio) {
           total_amount: lineaAnio.total_amount
         })
       );
+    })
+    .catch(function(error) {
+      console.log('Got error while executing procesarAnio');
+      console.log(error);
     });
 }
 
@@ -106,6 +110,10 @@ function procesarProveedorDeAnio(lineaProveedor) {
           total_amount: parentObject.total_amount
         })
       );
+    })
+    .catch(function(error) {
+      console.log('Got error while executing procesarProveedorDeAnio');
+      console.log(error);
     });
 };
 
@@ -132,7 +140,11 @@ function procesarRubroDeProveedor(lineaRubro) {
           total_amount: parentObject.total_amount
         })
       );
-    });
+    })
+    function(error) {
+      console.log('Got error while procesarRubroDeProveedor');
+      console.log(error);
+    };
 };
 
 function updateCategoria(proveedor, categoria, childObject) {
@@ -305,7 +317,7 @@ module.exports = function() {
           mongoose.connection.close();
         })
         .catch(function(error) {
-          console.log('Got error');
+          console.log('Got error while parsing report');
           console.log(error);
         });
     })
