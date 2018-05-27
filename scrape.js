@@ -4,7 +4,7 @@ var Xray = require('x-ray');
 var mongoose = require('mongoose');
 
 // Throttle the requests to n requests per ms milliseconds.
-var x = Xray().throttle(10, 1000);
+var x = Xray().throttle(5, 1000);
 
 var findOneAndUpdateOptions = {
   upsert: true,
