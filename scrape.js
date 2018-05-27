@@ -7,7 +7,7 @@ function printMemoryUsage() {
   console.log('---------------------');
   console.log('Memory usage:')
   const used = process.memoryUsage();
-  for (let key in used) {
+  for (var key in used) {
     console.log(`${key} ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
   }
   console.log('---------------------');
