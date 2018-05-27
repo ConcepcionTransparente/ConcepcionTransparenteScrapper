@@ -141,10 +141,10 @@ function procesarRubroDeProveedor(lineaRubro) {
         })
       );
     })
-    function(error) {
+    .catch(function(error) {
       console.log('Got error while procesarRubroDeProveedor');
       console.log(error);
-    };
+    });
 };
 
 function updateCategoria(proveedor, categoria, childObject) {
