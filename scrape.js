@@ -3,8 +3,21 @@ var error = [];
 var Xray = require('x-ray');
 var mongoose = require('mongoose');
 
+function printMemoryUsage() {
+  console.log('---------------------');
+  console.log('Memory usage:')
+  const used = process.memoryUsage();
+  for (let key in used) {
+    console.log(`${key} ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
+  }
+  console.log('---------------------');
+}
+
 // Throttle the requests to n requests per ms milliseconds.
-var x = Xray().throttle(5, 1000);
+var requestPerSecond = parseInt(process.env.REQUEST_PER_SECOND) || 5;
+console.log('Initializing x-ray with ' + requestPerSecond + ' request per second');
+
+var x = Xray().throttle(requestPerSecond, 1000);
 
 var findOneAndUpdateOptions = {
   upsert: true,
@@ -72,6 +85,10 @@ function procesarAnio(lineaAnio) {
         return;
       }
 
+      if (process.env.MAX_PROVEEDORES_POR_ANIO) {
+        lineasProveedor = lineasProveedor.slice(0, parseInt(process.env.MAX_PROVEEDORES_POR_ANIO));
+      }
+
       return Promise.all(
         // The second argument to the map function refers the whatever it is going
         // to be referenced by 'this' on the invoked function.
@@ -103,6 +120,10 @@ function procesarProveedorDeAnio(lineaProveedor) {
         return;
       }
 
+      if (process.env.MAX_RUBROS_POR_PROVEEDOR) {
+        lineasRubros = lineasRubros.slice(0, parseInt(process.env.MAX_RUBROS_POR_PROVEEDOR));
+      }
+
       return Promise.all(
         lineasRubros.map(procesarRubroDeProveedor, {
           provider: lineaProveedor,
@@ -130,6 +151,10 @@ function procesarRubroDeProveedor(lineaRubro) {
         error.push(lineasMeses);
 
         return;
+      }
+
+      if (process.env.MAX_MESES_POR_RUBRO) {
+        lineasMeses = lineasMeses.slice(0, parseInt(process.env.MAX_MESES_POR_RUBRO));
       }
 
       return Promise.all(
@@ -214,6 +239,8 @@ function updateProvider(proveedor, childObject) {
     .then(function(categoria) {
       console.log('Categoría persistida: ' + childObject.category);
 
+      printMemoryUsage();
+
       return updateCategoria(proveedor, categoria, childObject);
     })
     .catch(function(error) {
@@ -259,6 +286,8 @@ function persistir(lineaMes) {
     .then(function(proveedor) {
       console.log('Proveedor persistido: ' + childObject.grant_title);
 
+      printMemoryUsage();
+
       return updateProvider(proveedor, childObject);
     })
     .catch(function(error) {
@@ -280,6 +309,8 @@ function persistir(lineaMes) {
     .exec()
     .then(function() {
       console.log('Anio persistdo: ' + childObject.year);
+
+      printMemoryUsage();
     })
     .catch(function(error) {
       console.log('Got error while updating Year');
@@ -290,7 +321,6 @@ function persistir(lineaMes) {
 };
 
 module.exports = function() {
-
   console.log('Inicializando scrapping.');
 
   return mongoose
@@ -307,10 +337,16 @@ module.exports = function() {
         href: 'td:nth-of-type(8) a@href' // a@href a Ver por proveedores
       }])
         .then(function(lineasAnios) {
+          if (process.env.MAX_ANIOS) {
+            lineasAnios = lineasAnios.slice(0, parseInt(process.env.MAX_ANIOS));
+          }
+
           return Promise.all(lineasAnios.map(procesarAnio));
         })
         .then(function () {
           console.log('Done. Closing connection.');
+
+          printMemoryUsage();
 
           // En este punto es seguro cerrar la conexión de Mongoose porque se supone
           // que ya todo lo que se tenía que hacer se hizo

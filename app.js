@@ -2,11 +2,11 @@
 var time = require('node-tictoc');
 var http = require('http');
 
-var scrape = require('./scrape');
-var emailNotify = require('./email-notify');
-
 require('./models');
 require('dotenv').config();
+
+var scrape = require('./scrape');
+var emailNotify = require('./email-notify');
 
 /**
  * Schedule a scraping involves performing the actual scraping and also setting the
@@ -15,26 +15,26 @@ require('dotenv').config();
  * @return {[type]} [description]
  */
 function scheduleScraping() {
-    scrape()
-      .then(function() {
-        // La siguiente ejecución se agenda para en cuatro horas
-        $hours = 12;
-        $minutes = 0;
-        $seconds = 0;
+  scrape()
+    .then(function() {
+      // La siguiente ejecución se agenda para en cuatro horas
+      $hours = 12;
+      $minutes = 0;
+      $seconds = 0;
 
-        var nextExecutionDelay =
-          ($hours * 60 * 60 * 1000)
-            + ($minutes * 60 * 1000)
-            + ($seconds * 1000);
+      var nextExecutionDelay =
+        ($hours * 60 * 60 * 1000)
+          + ($minutes * 60 * 1000)
+          + ($seconds * 1000);
 
-        if (process.env.EMAIL_HOST) {
-          emailNotify(nextExecutionDelay);
-        }
+      if (process.env.EMAIL_HOST) {
+        emailNotify(nextExecutionDelay);
+      }
 
-        setTimeout(function() {
-            scheduleScraping();
-        }, nextExecutionDelay)
-      });
+      setTimeout(function() {
+          scheduleScraping();
+      }, nextExecutionDelay)
+    });
 }
 
 scheduleScraping();
