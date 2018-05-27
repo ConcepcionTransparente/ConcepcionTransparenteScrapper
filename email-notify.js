@@ -54,10 +54,6 @@ module.exports = function(nextExecutionDelay) {
             .count()
             .exec()
             .then(function(cantidadProveedores) {
-
-              console.log('Cantidad de proveedores: ' + cantidadProveedores);
-              console.log('Cantidad de órdenes de compra: ' + cantidadOrdenesCompra);
-              console.log('Done. Closing connection.');
               mongoose.connection.close();
 
               sendEmailNotification({

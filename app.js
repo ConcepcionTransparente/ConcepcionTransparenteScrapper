@@ -27,7 +27,9 @@ function scheduleScraping() {
             + ($minutes * 60 * 1000)
             + ($seconds * 1000);
 
-        emailNotify(nextExecutionDelay);
+        if (process.env.EMAIL_HOST) {
+          emailNotify(nextExecutionDelay);
+        }
 
         setTimeout(function() {
             scheduleScraping();
